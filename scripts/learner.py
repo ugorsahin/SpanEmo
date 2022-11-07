@@ -80,8 +80,7 @@ class Trainer(object):
         optimizer, scheduler, step_scheduler_on_batch = self.optimizer(args)
         self.model = self.model.to(device)
         headers = ['Train_Loss', 'Val_Loss', 'F1-Macro', 'F1-Micro', 'JS', 'Time']
-        pbar.write(headers, table=True)
-        for epoch in pbar:
+        for epoch in range(num_epochs):
             epoch += 1
             start_time = time.time()
             self.model.train()
@@ -101,7 +100,7 @@ class Trainer(object):
                 scheduler.step()
 
             overall_training_loss = overall_training_loss / len(self.train_data_loader.dataset)
-            overall_val_loss, pred_dict = self.predict(device, pbar)
+            overall_val_loss, pred_dict = self.predict(device)
             y_true, y_pred = pred_dict['y_true'], pred_dict['y_pred']
 
             str_stats = []
@@ -117,7 +116,8 @@ class Trainer(object):
                 )
             str_stats.append(format_time(time.time() - start_time))
             print('epoch#: ', epoch)
-            pbar.write(str_stats, table=True)
+            print(headers)
+            print(str_stats)
             self.early_stop(overall_val_loss, self.model)
             if self.early_stop.early_stop:
                 print("Early stopping")
@@ -142,11 +142,10 @@ class Trainer(object):
         step_scheduler_on_batch = True
         return optimizer, scheduler, step_scheduler_on_batch
 
-    def predict(self, device='cuda:0', pbar=None):
+    def predict(self, device='cuda:0'):
         """
         Evaluate the model on a validation set
         :param device: str (defaults to 'cuda:0')
-        :param pbar: fast_progress progress bar (defaults to None)
         :returns: overall_val_loss (float), accuracies (dict{'acc': value}, preds (dict)
         """
         current_size = len(self.val_data_loader.dataset)
@@ -183,11 +182,10 @@ class EvaluateOnTest(object):
         self.test_data_loader = test_data_loader
         self.model_path = model_path
 
-    def predict(self, device='cuda:0', pbar=None):
+    def predict(self, device='cuda:0'):
         """
         Evaluate the model on a validation set
         :param device: str (defaults to 'cuda:0')
-        :param pbar: fast_progress progress bar (defaults to None)
         :returns: None
         """
         self.model.to(device).load_state_dict(torch.load(self.model_path))

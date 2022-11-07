@@ -1,6 +1,9 @@
+
+# Fork Note
+This repository is adjusted for google colab. To use it, clone the repository and run `!./scripts/fast_start.sh` after changing working directory to SpanEmo `%cd SpanEmo`
+
 # SpanEmo
 ***
-
 Source code for the paper ["SpanEmo: Casting Multi-label Emotion Classification as Span-prediction"](https://www.aclweb.org/anthology/2021.eacl-main.135.pdf) in EACL2021.
 
 <p align="center">
