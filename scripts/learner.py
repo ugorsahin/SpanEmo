@@ -1,10 +1,11 @@
-from fastprogress.fastprogress import format_time, master_bar, progress_bar
+from fastprogress.fastprogress import format_time
 from transformers import AdamW, get_linear_schedule_with_warmup
 from sklearn.metrics import f1_score, jaccard_score
 import torch.nn.functional as F
 import numpy as np
 import torch
 import time
+from tqdm import tqdm
 
 
 class EarlyStopping:
@@ -78,7 +79,6 @@ class Trainer(object):
         """
         optimizer, scheduler, step_scheduler_on_batch = self.optimizer(args)
         self.model = self.model.to(device)
-        pbar = master_bar(range(num_epochs))
         headers = ['Train_Loss', 'Val_Loss', 'F1-Macro', 'F1-Micro', 'JS', 'Time']
         pbar.write(headers, table=True)
         for epoch in pbar:
@@ -86,7 +86,7 @@ class Trainer(object):
             start_time = time.time()
             self.model.train()
             overall_training_loss = 0.0
-            for step, batch in enumerate(progress_bar(self.train_data_loader, parent=pbar)):
+            for step, batch in enumerate(tqdm(self.train_data_loader)):
                 loss, num_rows, _, _ = self.model(batch, device)
                 overall_training_loss += loss.item() * num_rows
 
@@ -158,7 +158,7 @@ class Trainer(object):
         self.model.eval()
         with torch.no_grad():
             index_dict = 0
-            for step, batch in enumerate(progress_bar(self.val_data_loader, parent=pbar, leave=(pbar is not None))):
+            for step, batch in enumerate(tqdm(self.val_data_loader)):
                 loss, num_rows, y_pred, targets = self.model(batch, device)
                 overall_val_loss += loss.item() * num_rows
 
@@ -200,7 +200,7 @@ class EvaluateOnTest(object):
         start_time = time.time()
         with torch.no_grad():
             index_dict = 0
-            for step, batch in enumerate(progress_bar(self.test_data_loader, parent=pbar, leave=(pbar is not None))):
+            for step, batch in enumerate(tqdm(self.test_data_loader)):
                 _, num_rows, y_pred, targets = self.model(batch, device)
                 current_index = index_dict
                 preds_dict['y_true'][current_index: current_index + num_rows, :] = targets
